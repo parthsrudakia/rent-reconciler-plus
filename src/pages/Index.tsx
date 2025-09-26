@@ -39,13 +39,15 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const parseCSV = (content: string): Record<string, any>[] => {
+  const parseCSV = (content: string, skipRows: number = 0): Record<string, any>[] => {
     const lines = content.trim().split('\n');
-    if (lines.length < 2) return [];
+    if (lines.length < skipRows + 2) return [];
     
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    // Skip the specified number of rows
+    const relevantLines = lines.slice(skipRows);
+    const headers = relevantLines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     
-    return lines.slice(1).map(line => {
+    return relevantLines.slice(1).map(line => {
       const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
       const record: Record<string, any> = {};
       
@@ -63,24 +65,88 @@ const Index = () => {
     });
   };
 
+  const preprocessBankData = (data: any[]): BankRecord[] => {
+    return data
+      .map((record: any) => {
+        // Clean Amount field (remove commas and dollar signs, convert to number)
+        const rawAmount = record.Amount;
+        let amount: number;
+        
+        if (typeof rawAmount === 'string') {
+          const cleanAmount = rawAmount.replace(/,/g, '').replace(/\$/g, '');
+          amount = parseFloat(cleanAmount) || 0;
+        } else if (typeof rawAmount === 'number') {
+          amount = rawAmount;
+        } else {
+          amount = 0;
+        }
+        
+        return { ...record, Amount: amount };
+      })
+      // Filter for Zelle payments only
+      .filter((record: any) => {
+        const description = record.Description || '';
+        return description.startsWith('Zelle payment from') || 
+               description.startsWith('Zelle Scheduled payment from');
+      })
+      // Clean Description field
+      .map((record: any) => {
+        let description = record.Description || '';
+        
+        // Remove Zelle prefixes
+        description = description.replace(/^Zelle Scheduled payment from /, '');
+        description = description.replace(/^Zelle payment from /, '');
+        
+        // Trim whitespace
+        description = description.trim();
+        
+        // Remove " for ..." suffix
+        description = description.replace(/ for .*$/, '');
+        
+        // Remove " Conf# ..." suffix
+        description = description.replace(/ Conf# .*$/, '');
+        
+        // Convert to lowercase
+        description = description.toLowerCase();
+        
+        return {
+          ...record,
+          Date: record.Date,
+          Description: description,
+          Amount: record.Amount
+        };
+      });
+  };
+
+  const preprocessTenantData = (data: TenantRecord[]): TenantRecord[] => {
+    return data.map(record => ({
+      ...record,
+      'Pays as': (record['Pays as'] || '').toLowerCase()
+    }));
+  };
+
   const handleFileUpload = async (file: File, type: 'bank' | 'tenant') => {
     try {
       const content = await file.text();
-      const data = parseCSV(content);
       
       if (type === 'bank') {
-        setBankData(data as BankRecord[]);
+        // Skip 6 rows for bank statements as per your Python code
+        const rawData = parseCSV(content, 6);
+        const processedData = preprocessBankData(rawData as BankRecord[]);
+        setBankData(processedData);
         setBankFile(file);
         toast({
           title: "Bank data uploaded",
-          description: `Successfully loaded ${data.length} bank records`,
+          description: `Successfully loaded ${processedData.length} Zelle payment records`,
         });
       } else {
-        setTenantData(data as TenantRecord[]);
+        const rawData = parseCSV(content);
+        const processedData = preprocessTenantData(rawData as TenantRecord[]);
+        setTenantData(processedData);
         setTenantFile(file);
         toast({
           title: "Tenant data uploaded",
-          description: `Successfully loaded ${data.length} tenant records`,
+          description: `Successfully loaded ${processedData.length} tenant records`,
         });
       }
     } catch (error) {

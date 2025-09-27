@@ -330,30 +330,6 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Data Preview */}
-        {(bankData.length > 0 || tenantData.length > 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {bankData.length > 0 && (
-              <DataTable
-                title="Bank Transactions"
-                description="Preview of uploaded bank data"
-                data={bankData}
-                columns={Object.keys(bankData[0] || {})}
-                maxRows={5}
-              />
-            )}
-            {tenantData.length > 0 && (
-              <DataTable
-                title="Tenant Information"
-                description="Preview of uploaded tenant data"
-                data={tenantData}
-                columns={Object.keys(tenantData[0] || {})}
-                maxRows={5}
-              />
-            )}
-          </div>
-        )}
-
         {/* Reconciliation Results */}
         {reconciliationResults.length > 0 && (
           <ReconciliationResults 

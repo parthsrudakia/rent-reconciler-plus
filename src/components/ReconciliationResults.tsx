@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 interface ReconciliationMatch {
@@ -57,6 +58,60 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
     }).format(amount);
   };
 
+  // Filter matches by status
+  const matchedItems = matches.filter(match => match.status === 'match');
+  const mismatchedItems = matches.filter(match => match.status === 'mismatch' || match.status === 'missing');
+
+  const renderTable = (items: ReconciliationMatch[], emptyMessage: string) => (
+    <div className="rounded-lg border overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Status</TableHead>
+            <TableHead>Tenant</TableHead>
+            <TableHead>Pays As</TableHead>
+            <TableHead className="text-right">Expected Rent</TableHead>
+            <TableHead className="text-right">Actual Amount</TableHead>
+            <TableHead className="text-right">Difference</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            items.map((match, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(match.status)}
+                    {getStatusBadge(match.status)}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">{match.tenantName}</TableCell>
+                <TableCell>{match.paysAs}</TableCell>
+                <TableCell className="text-right font-mono">
+                  {formatCurrency(match.expectedRent)}
+                </TableCell>
+                <TableCell className="text-right font-mono">
+                  {formatCurrency(match.actualAmount)}
+                </TableCell>
+                <TableCell className={`text-right font-mono font-semibold ${
+                  match.difference === 0 ? 'text-success' : 'text-destructive'
+                }`}>
+                  {formatCurrency(match.difference)}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -108,53 +163,31 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tenant</TableHead>
-                  <TableHead>Pays As</TableHead>
-                  <TableHead className="text-right">Expected Rent</TableHead>
-                  <TableHead className="text-right">Actual Amount</TableHead>
-                  <TableHead className="text-right">Difference</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {matches.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      No reconciliation data available
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  matches.map((match, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(match.status)}
-                          {getStatusBadge(match.status)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{match.tenantName}</TableCell>
-                      <TableCell>{match.paysAs}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(match.expectedRent)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(match.actualAmount)}
-                      </TableCell>
-                      <TableCell className={`text-right font-mono font-semibold ${
-                        match.difference === 0 ? 'text-success' : 'text-destructive'
-                      }`}>
-                        {formatCurrency(match.difference)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="mismatched">
+                Mismatched ({mismatchedItems.length})
+              </TabsTrigger>
+              <TabsTrigger value="matched">
+                Matched ({matchedItems.length})
+              </TabsTrigger>
+              <TabsTrigger value="all">
+                All ({matches.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="mismatched" className="mt-6">
+              {renderTable(mismatchedItems, "No mismatched payments found")}
+            </TabsContent>
+            
+            <TabsContent value="matched" className="mt-6">
+              {renderTable(matchedItems, "No matched payments found")}
+            </TabsContent>
+            
+            <TabsContent value="all" className="mt-6">
+              {renderTable(matches, "No reconciliation data available")}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

@@ -7,6 +7,8 @@ import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 interface ReconciliationMatch {
   tenantName: string;
   paysAs: string;
+  email?: string;
+  phone?: string;
   expectedRent: number;
   actualAmount: number;
   difference: number;
@@ -70,6 +72,8 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
             <TableHead>Status</TableHead>
             <TableHead>Tenant</TableHead>
             <TableHead>Pays As</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
             <TableHead className="text-right">Expected Rent</TableHead>
             <TableHead className="text-right">Actual Amount</TableHead>
             <TableHead className="text-right">Difference</TableHead>
@@ -78,7 +82,7 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 {emptyMessage}
               </TableCell>
             </TableRow>
@@ -93,6 +97,8 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
                 </TableCell>
                 <TableCell className="font-medium">{match.tenantName}</TableCell>
                 <TableCell>{match.paysAs}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{match.email || '-'}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{match.phone || '-'}</TableCell>
                 <TableCell className="text-right font-mono">
                   {formatCurrency(match.expectedRent)}
                 </TableCell>

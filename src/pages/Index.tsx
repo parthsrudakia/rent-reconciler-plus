@@ -25,6 +25,8 @@ interface TenantRecord {
 interface ReconciliationMatch {
   tenantName: string;
   paysAs: string;
+  email?: string;
+  phone?: string;
   expectedRent: number;
   actualAmount: number;
   difference: number;
@@ -209,6 +211,8 @@ const Index = () => {
       const paysAs = tenant['Pays as'] || '';
       const expectedRent = tenant.ExpectedRent || 0;
       const tenantName = tenant.Name || tenant.TenantName || paysAs;
+      const email = tenant.Email || tenant.email || '';
+      const phone = tenant.Phone || tenant.phone || tenant['Phone Number'] || '';
       
       const actualAmount = statementSummary[paysAs] || 0;
       const difference = actualAmount - expectedRent;
@@ -221,6 +225,8 @@ const Index = () => {
       matches.push({
         tenantName,
         paysAs,
+        email,
+        phone,
         expectedRent,
         actualAmount,
         difference,

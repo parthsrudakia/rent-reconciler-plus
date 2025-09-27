@@ -5,6 +5,7 @@ import { ReconciliationResults } from "@/components/ReconciliationResults";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calculator, FileText, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,8 +33,10 @@ interface ReconciliationMatch {
 
 const Index = () => {
   const [bankData, setBankData] = useState<BankRecord[]>([]);
+  const [otherStatementData, setOtherStatementData] = useState<BankRecord[]>([]);
   const [tenantData, setTenantData] = useState<TenantRecord[]>([]);
   const [bankFile, setBankFile] = useState<File | null>(null);
+  const [otherStatementFile, setOtherStatementFile] = useState<File | null>(null);
   const [tenantFile, setTenantFile] = useState<File | null>(null);
   const [reconciliationResults, setReconciliationResults] = useState<ReconciliationMatch[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -125,7 +128,7 @@ const Index = () => {
     }));
   };
 
-  const handleFileUpload = async (file: File, type: 'bank' | 'tenant') => {
+  const handleFileUpload = async (file: File, type: 'bank' | 'other' | 'tenant') => {
     try {
       const content = await file.text();
       
@@ -138,6 +141,16 @@ const Index = () => {
         toast({
           title: "Bank data uploaded",
           description: `Successfully loaded ${processedData.length} Zelle payment records`,
+        });
+      } else if (type === 'other') {
+        // Don't skip rows for other statements
+        const rawData = parseCSV(content, 0);
+        const processedData = preprocessBankData(rawData as BankRecord[]);
+        setOtherStatementData(processedData);
+        setOtherStatementFile(file);
+        toast({
+          title: "Other statement data uploaded",
+          description: `Successfully loaded ${processedData.length} payment records`,
         });
       } else {
         const rawData = parseCSV(content);
@@ -159,10 +172,19 @@ const Index = () => {
   };
 
   const performReconciliation = () => {
-    if (!bankData.length || !tenantData.length) {
+    if (!tenantData.length) {
       toast({
         title: "Missing data",
-        description: "Please upload both bank and tenant files first",
+        description: "Please upload tenant data first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!bankData.length && !otherStatementData.length) {
+      toast({
+        title: "Missing data",
+        description: "Please upload at least one statement file first",
         variant: "destructive",
       });
       return;
@@ -170,8 +192,11 @@ const Index = () => {
 
     setIsProcessing(true);
 
-    // Group bank transactions by Description and sum amounts
-    const bankSummary = bankData.reduce((acc, record) => {
+    // Combine all statement data
+    const allStatementData = [...bankData, ...otherStatementData];
+
+    // Group all transactions by Description and sum amounts
+    const statementSummary = allStatementData.reduce((acc, record) => {
       const description = record.Description || '';
       acc[description] = (acc[description] || 0) + (record.Amount || 0);
       return acc;
@@ -185,7 +210,7 @@ const Index = () => {
       const expectedRent = tenant.ExpectedRent || 0;
       const tenantName = tenant.Name || tenant.TenantName || paysAs;
       
-      const actualAmount = bankSummary[paysAs] || 0;
+      const actualAmount = statementSummary[paysAs] || 0;
       const difference = actualAmount - expectedRent;
       
       let status: 'match' | 'mismatch' | 'missing' = 'missing';
@@ -248,24 +273,45 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FileUpload
-                title="Monthly Bank Data"
-                description="CSV file with bank transactions (must have Description and Amount columns)"
-                onFileSelect={(file) => handleFileUpload(file, 'bank')}
-                isUploaded={!!bankFile}
-                fileName={bankFile?.name}
-              />
-              <FileUpload
-                title="Tenant Information"
-                description="CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
-                onFileSelect={(file) => handleFileUpload(file, 'tenant')}
-                isUploaded={!!tenantFile}
-                fileName={tenantFile?.name}
-              />
-            </div>
+            <Tabs defaultValue="statements" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="statements">Statements</TabsTrigger>
+                <TabsTrigger value="other-statements">Other Statements</TabsTrigger>
+                <TabsTrigger value="tenants">Tenant Information</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="statements" className="mt-6">
+                <FileUpload
+                  title="Bank Statements"
+                  description="CSV file with bank transactions (will skip 6 header rows)"
+                  onFileSelect={(file) => handleFileUpload(file, 'bank')}
+                  isUploaded={!!bankFile}
+                  fileName={bankFile?.name}
+                />
+              </TabsContent>
+              
+              <TabsContent value="other-statements" className="mt-6">
+                <FileUpload
+                  title="Other Payment Statements"
+                  description="CSV file with other payment sources (same format as bank statements)"
+                  onFileSelect={(file) => handleFileUpload(file, 'other')}
+                  isUploaded={!!otherStatementFile}
+                  fileName={otherStatementFile?.name}
+                />
+              </TabsContent>
+              
+              <TabsContent value="tenants" className="mt-6">
+                <FileUpload
+                  title="Tenant Information"
+                  description="CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
+                  onFileSelect={(file) => handleFileUpload(file, 'tenant')}
+                  isUploaded={!!tenantFile}
+                  fileName={tenantFile?.name}
+                />
+              </TabsContent>
+            </Tabs>
             
-            {bankData.length > 0 && tenantData.length > 0 && (
+            {(bankData.length > 0 || otherStatementData.length > 0) && tenantData.length > 0 && (
               <>
                 <Separator className="my-6" />
                 <div className="flex justify-center">

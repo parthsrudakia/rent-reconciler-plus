@@ -39,6 +39,11 @@ export const FileUpload = ({
     event.preventDefault();
   }, []);
 
+  const handleButtonClick = useCallback(() => {
+    const input = document.getElementById(`file-${title.replace(/\s+/g, '-').toLowerCase()}`);
+    input?.click();
+  }, [title]);
+
   return (
     <Card className="border-2 border-dashed border-muted hover:border-primary/50 transition-colors">
       <CardHeader>
@@ -69,18 +74,16 @@ export const FileUpload = ({
               </div>
             </>
           )}
-          <label htmlFor={`file-${title.replace(/\s+/g, '-').toLowerCase()}`}>
-            <Button variant="outline" size="sm" className="cursor-pointer">
-              {isUploaded ? 'Change File' : 'Select File'}
-            </Button>
-            <input
-              id={`file-${title.replace(/\s+/g, '-').toLowerCase()}`}
-              type="file"
-              accept={acceptedTypes}
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
+          <Button variant="outline" size="sm" className="cursor-pointer" onClick={handleButtonClick}>
+            {isUploaded ? 'Change File' : 'Select File'}
+          </Button>
+          <input
+            id={`file-${title.replace(/\s+/g, '-').toLowerCase()}`}
+            type="file"
+            accept={acceptedTypes}
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
       </CardContent>
     </Card>

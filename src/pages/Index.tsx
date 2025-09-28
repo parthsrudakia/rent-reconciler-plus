@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calculator, FileText, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { HiveLogo } from "@/components/HiveLogo";
+import hiveLogo from "@/assets/hive-logo.png";
 
 interface BankRecord {
   Description: string;
@@ -259,7 +259,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <HiveLogo />
+              <img src={hiveLogo} alt="Hive NY Inc Logo" className="h-16 w-auto" />
               <div className="h-8 w-px bg-border"></div>
               <div className="flex items-center gap-3">
                 <Calculator className="h-6 w-6 text-primary" />

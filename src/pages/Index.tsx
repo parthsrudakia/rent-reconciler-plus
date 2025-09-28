@@ -256,11 +256,26 @@ const Index = () => {
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <Calculator className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Rent Reconciliation</h1>
-              <p className="text-muted-foreground">Match bank transactions with tenant payments and identify discrepancies</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-black rounded-full"></div>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-wide">HIVE</h1>
+                  <p className="text-xs text-muted-foreground">New York Living Made Simple</p>
+                </div>
+              </div>
+              <div className="ml-8">
+                <div className="flex items-center gap-3">
+                  <Calculator className="h-6 w-6 text-primary" />
+                  <div>
+                    <h2 className="text-xl font-semibold">Rent Reconciliation</h2>
+                    <p className="text-sm text-muted-foreground">Match bank transactions with tenant payments</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

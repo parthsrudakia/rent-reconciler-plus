@@ -259,7 +259,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <img src={hiveLogo} alt="Hive NY Inc Logo" className="h-16 w-auto" />
+              <img src={hiveLogo} alt="Hive NY Inc Logo" className="h-24 w-auto" />
               <div className="h-8 w-px bg-border"></div>
               <div className="flex items-center gap-3">
                 <Calculator className="h-6 w-6 text-primary" />

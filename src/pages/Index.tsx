@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calculator, FileText, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import hiveLogo from "@/assets/hive-logo.png";
 
 interface BankRecord {
   Description: string;
@@ -257,17 +256,11 @@ const Index = () => {
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <img src={hiveLogo} alt="Hive NY Inc Logo" className="h-24 w-auto" />
-              <div className="h-8 w-px bg-border"></div>
-              <div className="flex items-center gap-3">
-                <Calculator className="h-6 w-6 text-primary" />
-                <div>
-                  <h2 className="text-xl font-semibold">Rent Reconciliation</h2>
-                  <p className="text-sm text-muted-foreground">Match bank transactions with tenant payments</p>
-                </div>
-              </div>
+          <div className="flex items-center gap-3">
+            <Calculator className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Rent Reconciliation</h1>
+              <p className="text-muted-foreground">Match bank transactions with tenant payments and identify discrepancies</p>
             </div>
           </div>
         </div>

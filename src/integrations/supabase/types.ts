@@ -14,7 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bank_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          date: string | null
+          description: string
+          id: string
+          raw_data: Json | null
+          source: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          date?: string | null
+          description: string
+          id?: string
+          raw_data?: Json | null
+          source: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          date?: string | null
+          description?: string
+          id?: string
+          raw_data?: Json | null
+          source?: string
+        }
+        Relationships: []
+      }
+      reconciliation_results: {
+        Row: {
+          actual_amount: number
+          created_at: string | null
+          difference: number
+          email: string | null
+          expected_rent: number
+          id: string
+          pays_as: string
+          phone: string | null
+          reconciliation_date: string | null
+          status: string
+          tenant_id: string | null
+          tenant_name: string
+        }
+        Insert: {
+          actual_amount: number
+          created_at?: string | null
+          difference: number
+          email?: string | null
+          expected_rent: number
+          id?: string
+          pays_as: string
+          phone?: string | null
+          reconciliation_date?: string | null
+          status: string
+          tenant_id?: string | null
+          tenant_name: string
+        }
+        Update: {
+          actual_amount?: number
+          created_at?: string | null
+          difference?: number
+          email?: string | null
+          expected_rent?: number
+          id?: string
+          pays_as?: string
+          phone?: string | null
+          reconciliation_date?: string | null
+          status?: string
+          tenant_id?: string | null
+          tenant_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_results_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          expected_rent: number
+          id: string
+          name: string
+          pays_as: string
+          phone: string | null
+          raw_data: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          expected_rent: number
+          id?: string
+          name: string
+          pays_as: string
+          phone?: string | null
+          raw_data?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          expected_rent?: number
+          id?: string
+          name?: string
+          pays_as?: string
+          phone?: string | null
+          raw_data?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -248,11 +248,15 @@ const Index = () => {
         setTenantFile(file);
         
         // Save to database (upsert to prevent duplicates)
-        await saveTenants(processedData);
+        const { updatedCount, newCount } = await saveTenants(processedData);
+        
+        const updateMsg = updatedCount > 0 ? `${updatedCount} updated` : '';
+        const newMsg = newCount > 0 ? `${newCount} new` : '';
+        const parts = [updateMsg, newMsg].filter(Boolean);
         
         toast({
           title: "Tenant data uploaded",
-          description: `Successfully loaded ${processedData.length} tenant records`,
+          description: `Successfully processed ${processedData.length} tenant records (${parts.join(', ')})`,
         });
       }
     } catch (error) {
@@ -292,6 +296,15 @@ const Index = () => {
 
   const saveTenants = async (data: TenantRecord[]) => {
     try {
+      // Check which tenants already exist
+      const paysAsList = data.map(record => record['Pays as']);
+      const { data: existingTenants } = await supabase
+        .from('tenants')
+        .select('pays_as, name')
+        .in('pays_as', paysAsList);
+
+      const existingPaysAs = new Set(existingTenants?.map(t => t.pays_as) || []);
+      
       const tenants = data.map(record => ({
         name: record.Name || record.TenantName || record['Pays as'],
         pays_as: record['Pays as'],
@@ -306,10 +319,16 @@ const Index = () => {
         .from('tenants')
         .upsert(tenants, { 
           onConflict: 'pays_as',
-          ignoreDuplicates: false // Update if tenant info changes
+          ignoreDuplicates: false // Always update if tenant info changes
         });
 
       if (error) throw error;
+
+      // Count updates vs new additions
+      const updatedCount = tenants.filter(t => existingPaysAs.has(t.pays_as)).length;
+      const newCount = tenants.length - updatedCount;
+
+      return { updatedCount, newCount };
     } catch (error) {
       console.error('Error saving tenants:', error);
       throw error;

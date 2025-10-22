@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calculator, FileText, TrendingUp, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from 'xlsx';
 
 interface BankRecord {
   Description: string;
@@ -468,8 +469,6 @@ const Index = () => {
   };
 
   const exportToExcel = () => {
-    const XLSX = require('xlsx');
-    
     const exportData = reconciliationResults.map(match => ({
       'Address': match.address || '',
       'Apt': match.apt || '',

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Calculator, FileText, TrendingUp } from "lucide-react";
+import { Calculator, FileText, TrendingUp, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +21,9 @@ interface TenantRecord {
   [key: string]: any;
   'Pays as': string;
   ExpectedRent: number;
+  Address?: string;
+  Apt?: string;
+  'Room No'?: string;
 }
 
 interface ReconciliationMatch {
@@ -28,6 +31,9 @@ interface ReconciliationMatch {
   paysAs: string;
   email?: string;
   phone?: string;
+  address?: string;
+  apt?: string;
+  roomNo?: string;
   expectedRent: number;
   actualAmount: number;
   difference: number;
@@ -101,6 +107,9 @@ const Index = () => {
           ExpectedRent: typeof t.expected_rent === 'string' ? parseFloat(t.expected_rent) : t.expected_rent,
           Email: t.email || '',
           Phone: t.phone || '',
+          Address: t.address || '',
+          Apt: t.apt || '',
+          'Room No': t.room_no || '',
         })));
       }
 
@@ -110,6 +119,9 @@ const Index = () => {
           paysAs: r.pays_as,
           email: r.email || '',
           phone: r.phone || '',
+          address: r.address || '',
+          apt: r.apt || '',
+          roomNo: r.room_no || '',
           expectedRent: typeof r.expected_rent === 'string' ? parseFloat(r.expected_rent) : r.expected_rent,
           actualAmount: typeof r.actual_amount === 'string' ? parseFloat(r.actual_amount) : r.actual_amount,
           difference: typeof r.difference === 'string' ? parseFloat(r.difference) : r.difference,
@@ -311,6 +323,9 @@ const Index = () => {
         expected_rent: record.ExpectedRent,
         email: record.Email || record.email || null,
         phone: record.Phone || record.phone || record['Phone Number'] || null,
+        address: record.Address || record.address || null,
+        apt: record.Apt || record.apt || null,
+        room_no: record['Room No'] || record.room_no || null,
         raw_data: record,
       }));
 
@@ -376,6 +391,9 @@ const Index = () => {
         const tenantName = tenant.Name || tenant.TenantName || paysAs;
         const email = tenant.Email || tenant.email || '';
         const phone = tenant.Phone || tenant.phone || tenant['Phone Number'] || '';
+        const address = tenant.Address || tenant.address || '';
+        const apt = tenant.Apt || tenant.apt || '';
+        const roomNo = tenant['Room No'] || tenant.room_no || '';
         
         const actualAmount = statementSummary[paysAs] || 0;
         const difference = actualAmount - expectedRent;
@@ -390,6 +408,9 @@ const Index = () => {
           paysAs,
           email,
           phone,
+          address,
+          apt,
+          roomNo,
           expectedRent,
           actualAmount,
           difference,
@@ -425,6 +446,9 @@ const Index = () => {
         pays_as: match.paysAs,
         email: match.email || null,
         phone: match.phone || null,
+        address: match.address || null,
+        apt: match.apt || null,
+        room_no: match.roomNo || null,
         expected_rent: match.expectedRent,
         actual_amount: match.actualAmount,
         difference: match.difference,
@@ -441,6 +465,34 @@ const Index = () => {
       console.error('Error saving reconciliation results:', error);
       throw error;
     }
+  };
+
+  const exportToExcel = () => {
+    const XLSX = require('xlsx');
+    
+    const exportData = reconciliationResults.map(match => ({
+      'Address': match.address || '',
+      'Apt': match.apt || '',
+      'Room No': match.roomNo || '',
+      'Tenant Name': match.tenantName,
+      'Email Address': match.email || '',
+      'Phone': match.phone || '',
+      'Expected Rent': match.expectedRent,
+      'Actual Paid Amount': match.actualAmount,
+      'Paid Matches (Y/N)': match.status === 'match' ? 'Y' : 'N',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reconciliation');
+    
+    const date = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `Reconciliation_${date}.xlsx`);
+
+    toast({
+      title: "Export successful",
+      description: "Reconciliation data exported to Excel file",
+    });
   };
 
   const summary = {
@@ -538,10 +590,22 @@ const Index = () => {
 
         {/* Reconciliation Results */}
         {reconciliationResults.length > 0 && (
-          <ReconciliationResults 
-            matches={reconciliationResults} 
-            summary={summary}
-          />
+          <>
+            <div className="flex justify-end">
+              <Button 
+                onClick={exportToExcel}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export to Excel
+              </Button>
+            </div>
+            <ReconciliationResults 
+              matches={reconciliationResults} 
+              summary={summary}
+            />
+          </>
         )}
       </div>
     </div>

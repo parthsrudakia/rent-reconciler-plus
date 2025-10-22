@@ -99,6 +99,8 @@ export type Database = {
       }
       tenants: {
         Row: {
+          address: string | null
+          apt: string | null
           created_at: string | null
           email: string | null
           expected_rent: number
@@ -107,9 +109,12 @@ export type Database = {
           pays_as: string
           phone: string | null
           raw_data: Json | null
+          room_no: string | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          apt?: string | null
           created_at?: string | null
           email?: string | null
           expected_rent: number
@@ -118,9 +123,12 @@ export type Database = {
           pays_as: string
           phone?: string | null
           raw_data?: Json | null
+          room_no?: string | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          apt?: string | null
           created_at?: string | null
           email?: string | null
           expected_rent?: number
@@ -129,6 +137,7 @@ export type Database = {
           pays_as?: string
           phone?: string | null
           raw_data?: Json | null
+          room_no?: string | null
           updated_at?: string | null
         }
         Relationships: []

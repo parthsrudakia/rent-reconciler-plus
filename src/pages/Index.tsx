@@ -326,7 +326,7 @@ const Index = () => {
         phone: record.Phone || record.phone || record['Phone Number'] || null,
         address: record.Address || record.address || null,
         apt: record.Apt || record.apt || null,
-        room_no: record['Room No'] || record.room_no || null,
+        room_no: record['Room No'] || record['RoomNo'] || record.room_no || record['Room#'] || null,
         raw_data: record,
       }));
 
@@ -394,7 +394,7 @@ const Index = () => {
         const phone = tenant.Phone || tenant.phone || tenant['Phone Number'] || '';
         const address = tenant.Address || tenant.address || '';
         const apt = tenant.Apt || tenant.apt || '';
-        const roomNo = tenant['Room No'] || tenant.room_no || '';
+        const roomNo = tenant['Room No'] || tenant['RoomNo'] || tenant.room_no || tenant['Room#'] || '';
         
         const actualAmount = statementSummary[paysAs] || 0;
         const difference = actualAmount - expectedRent;
@@ -470,7 +470,6 @@ const Index = () => {
 
   const exportToExcel = () => {
     const exportData = reconciliationResults.map(match => ({
-      'Address': match.address || '',
       'Apt': match.apt || '',
       'Room No': match.roomNo || '',
       'Tenant Name': match.tenantName,
@@ -485,15 +484,14 @@ const Index = () => {
     
     // Set column widths
     worksheet['!cols'] = [
-      { wch: 30 }, // Address
-      { wch: 8 },  // Apt
-      { wch: 10 }, // Room No
+      { wch: 10 }, // Apt
+      { wch: 12 }, // Room No
       { wch: 20 }, // Tenant Name
       { wch: 25 }, // Email
       { wch: 15 }, // Phone
-      { wch: 13 }, // Expected Rent
-      { wch: 17 }, // Actual Paid Amount
-      { wch: 16 }, // Paid Matches
+      { wch: 15 }, // Expected Rent
+      { wch: 18 }, // Actual Paid Amount
+      { wch: 18 }, // Paid Matches
     ];
 
     // Style the header row
@@ -528,16 +526,17 @@ const Index = () => {
             bottom: { style: "thin", color: { rgb: "D0D0D0" } },
             left: { style: "thin", color: { rgb: "D0D0D0" } },
             right: { style: "thin", color: { rgb: "D0D0D0" } }
-          }
+          },
+          alignment: { vertical: "center" }
         };
 
-        // Format currency columns
-        if (col === 6 || col === 7) { // Expected Rent and Actual Paid Amount
+        // Format currency columns (Expected Rent and Actual Paid Amount)
+        if (col === 5 || col === 6) {
           worksheet[cellAddress].z = '$#,##0.00';
         }
 
         // Conditional formatting for Paid Matches column (Y/N)
-        if (col === 8) {
+        if (col === 7) {
           const value = worksheet[cellAddress].v;
           worksheet[cellAddress].s = {
             ...worksheet[cellAddress].s,

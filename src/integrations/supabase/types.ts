@@ -47,6 +47,8 @@ export type Database = {
       reconciliation_results: {
         Row: {
           actual_amount: number
+          address: string | null
+          apt: string | null
           created_at: string | null
           difference: number
           email: string | null
@@ -55,12 +57,15 @@ export type Database = {
           pays_as: string
           phone: string | null
           reconciliation_date: string | null
+          room_no: string | null
           status: string
           tenant_id: string | null
           tenant_name: string
         }
         Insert: {
           actual_amount: number
+          address?: string | null
+          apt?: string | null
           created_at?: string | null
           difference: number
           email?: string | null
@@ -69,12 +74,15 @@ export type Database = {
           pays_as: string
           phone?: string | null
           reconciliation_date?: string | null
+          room_no?: string | null
           status: string
           tenant_id?: string | null
           tenant_name: string
         }
         Update: {
           actual_amount?: number
+          address?: string | null
+          apt?: string | null
           created_at?: string | null
           difference?: number
           email?: string | null
@@ -83,6 +91,7 @@ export type Database = {
           pays_as?: string
           phone?: string | null
           reconciliation_date?: string | null
+          room_no?: string | null
           status?: string
           tenant_id?: string | null
           tenant_name?: string

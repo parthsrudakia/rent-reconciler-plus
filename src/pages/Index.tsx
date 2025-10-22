@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileUpload } from "@/components/FileUpload";
-import { DataTable } from "@/components/DataTable";
 import { ReconciliationResults } from "@/components/ReconciliationResults";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calculator, FileText, TrendingUp, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 
 interface BankRecord {
@@ -50,91 +48,7 @@ const Index = () => {
   const [tenantFile, setTenantFile] = useState<File | null>(null);
   const [reconciliationResults, setReconciliationResults] = useState<ReconciliationMatch[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-
-  // Load existing data on mount
-  useEffect(() => {
-    loadExistingData();
-  }, []);
-
-  const loadExistingData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Load bank transactions
-      const { data: bankTransactions } = await supabase
-        .from('bank_transactions')
-        .select('*')
-        .eq('source', 'bank');
-      
-      const { data: otherTransactions } = await supabase
-        .from('bank_transactions')
-        .select('*')
-        .eq('source', 'other');
-      
-      // Load tenants
-      const { data: tenants } = await supabase
-        .from('tenants')
-        .select('*');
-      
-      // Load latest reconciliation results
-      const { data: results } = await supabase
-        .from('reconciliation_results')
-        .select('*')
-        .order('reconciliation_date', { ascending: false })
-        .limit(100);
-
-      if (bankTransactions) {
-        setBankData(bankTransactions.map(t => ({
-          Description: t.description,
-          Amount: typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount,
-          Date: t.date || '',
-        })));
-      }
-
-      if (otherTransactions) {
-        setOtherStatementData(otherTransactions.map(t => ({
-          Description: t.description,
-          Amount: typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount,
-          Date: t.date || '',
-        })));
-      }
-
-      if (tenants) {
-        setTenantData(tenants.map(t => ({
-          Name: t.name,
-          'Pays as': t.pays_as,
-          ExpectedRent: typeof t.expected_rent === 'string' ? parseFloat(t.expected_rent) : t.expected_rent,
-          Email: t.email || '',
-          Phone: t.phone || '',
-          Address: t.address || '',
-          Apt: t.apt || '',
-          'Room No': t.room_no || '',
-        })));
-      }
-
-      if (results && results.length > 0) {
-        setReconciliationResults(results.map(r => ({
-          tenantName: r.tenant_name,
-          paysAs: r.pays_as,
-          email: r.email || '',
-          phone: r.phone || '',
-          address: r.address || '',
-          apt: r.apt || '',
-          roomNo: r.room_no || '',
-          expectedRent: typeof r.expected_rent === 'string' ? parseFloat(r.expected_rent) : r.expected_rent,
-          actualAmount: typeof r.actual_amount === 'string' ? parseFloat(r.actual_amount) : r.actual_amount,
-          difference: typeof r.difference === 'string' ? parseFloat(r.difference) : r.difference,
-          status: r.status as 'match' | 'mismatch' | 'missing',
-        })));
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const parseCSV = (content: string, skipRows: number = 0): Record<string, any>[] => {
     const lines = content.trim().split('\n');
@@ -254,9 +168,6 @@ const Index = () => {
         setBankData(processedData);
         setBankFile(file);
         
-        // Save to database (upsert to prevent duplicates)
-        await saveBankTransactions(processedData, 'bank');
-        
         toast({
           title: "Bank data uploaded",
           description: `Successfully loaded ${processedData.length} Zelle payment records`,
@@ -268,9 +179,6 @@ const Index = () => {
         setOtherStatementData(processedData);
         setOtherStatementFile(file);
         
-        // Save to database (upsert to prevent duplicates)
-        await saveBankTransactions(processedData, 'other');
-        
         toast({
           title: "Other statement data uploaded",
           description: `Successfully loaded ${processedData.length} payment records`,
@@ -281,16 +189,9 @@ const Index = () => {
         setTenantData(processedData);
         setTenantFile(file);
         
-        // Save to database (upsert to prevent duplicates)
-        const { updatedCount, newCount } = await saveTenants(processedData);
-        
-        const updateMsg = updatedCount > 0 ? `${updatedCount} updated` : '';
-        const newMsg = newCount > 0 ? `${newCount} new` : '';
-        const parts = [updateMsg, newMsg].filter(Boolean);
-        
         toast({
           title: "Tenant data uploaded",
-          description: `Successfully processed ${processedData.length} tenant records (${parts.join(', ')})`,
+          description: `Successfully processed ${processedData.length} tenant records`,
         });
       }
     } catch (error) {
@@ -300,83 +201,6 @@ const Index = () => {
         description: "Failed to parse the file. Please check the format.",
         variant: "destructive",
       });
-    }
-  };
-
-  const saveBankTransactions = async (data: BankRecord[], source: 'bank' | 'other') => {
-    try {
-      const transactions = data.map(record => ({
-        description: record.Description,
-        amount: record.Amount,
-        date: record.Date || null,
-        source,
-        raw_data: record,
-      }));
-
-      // Use upsert to handle duplicates gracefully
-      const { error } = await supabase
-        .from('bank_transactions')
-        .upsert(transactions, { 
-          onConflict: 'description,amount,date,source',
-          ignoreDuplicates: true 
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving transactions:', error);
-      throw error;
-    }
-  };
-
-  const saveTenants = async (data: TenantRecord[]) => {
-    try {
-      // Deduplicate data by pays_as (keep the last occurrence)
-      const uniqueData = Array.from(
-        data.reduce((map, record) => {
-          map.set(record['Pays as'], record);
-          return map;
-        }, new Map<string, TenantRecord>()).values()
-      );
-
-      // Check which tenants already exist
-      const paysAsList = uniqueData.map(record => record['Pays as']);
-      const { data: existingTenants } = await supabase
-        .from('tenants')
-        .select('pays_as, name')
-        .in('pays_as', paysAsList);
-
-      const existingPaysAs = new Set(existingTenants?.map(t => t.pays_as) || []);
-      
-      const tenants = uniqueData.map(record => ({
-        name: record.Name || record.TenantName || record['Pays as'],
-        pays_as: record['Pays as'],
-        expected_rent: record.ExpectedRent,
-        email: record.Email || record.email || null,
-        phone: record.Phone || record.phone || record['Phone Number'] || null,
-        address: record.Address || record.address || null,
-        apt: record.Apt || record.apt || null,
-        room_no: record['Room No'] || record['RoomNo'] || record.Room || record.room_no || record['Room#'] || null,
-        raw_data: record,
-      }));
-
-      // Use upsert to update existing tenants or create new ones
-      const { error } = await supabase
-        .from('tenants')
-        .upsert(tenants, { 
-          onConflict: 'pays_as',
-          ignoreDuplicates: false // Always update if tenant info changes
-        });
-
-      if (error) throw error;
-
-      // Count updates vs new additions
-      const updatedCount = tenants.filter(t => existingPaysAs.has(t.pays_as)).length;
-      const newCount = tenants.length - updatedCount;
-
-      return { updatedCount, newCount };
-    } catch (error) {
-      console.error('Error saving tenants:', error);
-      throw error;
     }
   };
 
@@ -450,9 +274,6 @@ const Index = () => {
 
       setReconciliationResults(matches);
 
-      // Save reconciliation results to database
-      await saveReconciliationResults(matches);
-
       toast({
         title: "Reconciliation complete",
         description: `Processed ${matches.length} tenant records`,
@@ -466,34 +287,6 @@ const Index = () => {
       });
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const saveReconciliationResults = async (matches: ReconciliationMatch[]) => {
-    try {
-      const results = matches.map(match => ({
-        tenant_name: match.tenantName,
-        pays_as: match.paysAs,
-        email: match.email || null,
-        phone: match.phone || null,
-        address: match.address || null,
-        apt: match.apt || null,
-        room_no: match.roomNo || null,
-        expected_rent: match.expectedRent,
-        actual_amount: match.actualAmount,
-        difference: match.difference,
-        status: match.status,
-        reconciliation_date: new Date().toISOString(),
-      }));
-
-      const { error } = await supabase
-        .from('reconciliation_results')
-        .insert(results);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving reconciliation results:', error);
-      throw error;
     }
   };
 

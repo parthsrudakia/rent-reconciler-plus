@@ -482,15 +482,87 @@ const Index = () => {
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 30 }, // Address
+      { wch: 8 },  // Apt
+      { wch: 10 }, // Room No
+      { wch: 20 }, // Tenant Name
+      { wch: 25 }, // Email
+      { wch: 15 }, // Phone
+      { wch: 13 }, // Expected Rent
+      { wch: 17 }, // Actual Paid Amount
+      { wch: 16 }, // Paid Matches
+    ];
+
+    // Style the header row
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!worksheet[cellAddress]) continue;
+      
+      worksheet[cellAddress].s = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "4472C4" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } }
+        }
+      };
+    }
+
+    // Add borders and formatting to data rows
+    for (let row = range.s.r + 1; row <= range.e.r; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!worksheet[cellAddress]) continue;
+
+        // Apply borders to all cells
+        worksheet[cellAddress].s = {
+          border: {
+            top: { style: "thin", color: { rgb: "D0D0D0" } },
+            bottom: { style: "thin", color: { rgb: "D0D0D0" } },
+            left: { style: "thin", color: { rgb: "D0D0D0" } },
+            right: { style: "thin", color: { rgb: "D0D0D0" } }
+          }
+        };
+
+        // Format currency columns
+        if (col === 6 || col === 7) { // Expected Rent and Actual Paid Amount
+          worksheet[cellAddress].z = '$#,##0.00';
+        }
+
+        // Conditional formatting for Paid Matches column (Y/N)
+        if (col === 8) {
+          const value = worksheet[cellAddress].v;
+          worksheet[cellAddress].s = {
+            ...worksheet[cellAddress].s,
+            fill: { 
+              fgColor: { rgb: value === 'Y' ? "C6EFCE" : "FFC7CE" } 
+            },
+            font: { 
+              color: { rgb: value === 'Y' ? "006100" : "9C0006" },
+              bold: true
+            },
+            alignment: { horizontal: "center", vertical: "center" }
+          };
+        }
+      }
+    }
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Reconciliation');
     
     const date = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(workbook, `Reconciliation_${date}.xlsx`);
+    XLSX.writeFile(workbook, `Reconciliation_${date}.xlsx`, { cellStyles: true });
 
     toast({
       title: "Export successful",
-      description: "Reconciliation data exported to Excel file",
+      description: "Styled reconciliation data exported to Excel file",
     });
   };
 

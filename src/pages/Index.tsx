@@ -326,7 +326,7 @@ const Index = () => {
         phone: record.Phone || record.phone || record['Phone Number'] || null,
         address: record.Address || record.address || null,
         apt: record.Apt || record.apt || null,
-        room_no: record['Room No'] || record['RoomNo'] || record.room_no || record['Room#'] || null,
+        room_no: record['Room No'] || record['RoomNo'] || record.Room || record.room_no || record['Room#'] || null,
         raw_data: record,
       }));
 
@@ -394,7 +394,7 @@ const Index = () => {
         const phone = tenant.Phone || tenant.phone || tenant['Phone Number'] || '';
         const address = tenant.Address || tenant.address || '';
         const apt = tenant.Apt || tenant.apt || '';
-        const roomNo = tenant['Room No'] || tenant['RoomNo'] || tenant.room_no || tenant['Room#'] || '';
+        const roomNo = tenant['Room No'] || tenant['RoomNo'] || tenant.Room || tenant.room_no || tenant['Room#'] || '';
         
         const actualAmount = statementSummary[paysAs] || 0;
         const difference = actualAmount - expectedRent;

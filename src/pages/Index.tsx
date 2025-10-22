@@ -217,8 +217,14 @@ const Index = () => {
 
   const preprocessTenantData = (data: TenantRecord[]): TenantRecord[] => {
     return data.map(record => ({
-      ...record,
-      'Pays as': (record['Pays as'] || '').toLowerCase()
+      Name: record.Name || record.TenantName || '',
+      'Pays as': (record['Pays as'] || '').toLowerCase(),
+      ExpectedRent: record.ExpectedRent || record['Expected Rent'] || 0,
+      Email: record.Email || record.email || '',
+      Phone: record.Phone || record.phone || record['Phone Number'] || '',
+      Address: record.Address || record.address || '',
+      Apt: record.Apt || record.apt || '',
+      'Room No': record['Room No'] || record.RoomNo || record.Room || record.room_no || record['Room#'] || '',
     }));
   };
 

@@ -216,16 +216,31 @@ const Index = () => {
   };
 
   const preprocessTenantData = (data: TenantRecord[]): TenantRecord[] => {
-    return data.map(record => ({
-      Name: record.Name || record.TenantName || '',
-      'Pays as': (record['Pays as'] || '').toLowerCase(),
-      ExpectedRent: record.ExpectedRent || record['Expected Rent'] || 0,
-      Email: record.Email || record.email || '',
-      Phone: record.Phone || record.phone || record['Phone Number'] || '',
-      Address: record.Address || record.address || '',
-      Apt: record.Apt || record.apt || '',
-      'Room No': record['Room No'] || record.RoomNo || record.Room || record.room_no || record['Room#'] || '',
-    }));
+    console.log('Raw tenant CSV data sample:', data[0]);
+    console.log('All column names:', data[0] ? Object.keys(data[0]) : []);
+    
+    return data.map(record => {
+      // Log first record for debugging
+      if (data.indexOf(record) === 0) {
+        console.log('First record mapping:', {
+          'Pays as': record['Pays as'],
+          ExpectedRent: record.ExpectedRent || record['Expected Rent'],
+          Email: record.Email || record.email,
+          Phone: record.Phone || record.phone || record['Phone Number'],
+        });
+      }
+      
+      return {
+        Name: record.Name || record.TenantName || '',
+        'Pays as': (record['Pays as'] || '').toLowerCase(),
+        ExpectedRent: record.ExpectedRent || record['Expected Rent'] || 0,
+        Email: record.Email || record.email || '',
+        Phone: record.Phone || record.phone || record['Phone Number'] || '',
+        Address: record.Address || record.address || '',
+        Apt: record.Apt || record.apt || '',
+        'Room No': record['Room No'] || record.RoomNo || record.Room || record.room_no || record['Room#'] || '',
+      };
+    });
   };
 
   const handleFileUpload = async (file: File, type: 'bank' | 'other' | 'tenant') => {

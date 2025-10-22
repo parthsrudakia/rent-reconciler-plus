@@ -315,8 +315,16 @@ const Index = () => {
 
   const saveTenants = async (data: TenantRecord[]) => {
     try {
+      // Deduplicate data by pays_as (keep the last occurrence)
+      const uniqueData = Array.from(
+        data.reduce((map, record) => {
+          map.set(record['Pays as'], record);
+          return map;
+        }, new Map<string, TenantRecord>()).values()
+      );
+
       // Check which tenants already exist
-      const paysAsList = data.map(record => record['Pays as']);
+      const paysAsList = uniqueData.map(record => record['Pays as']);
       const { data: existingTenants } = await supabase
         .from('tenants')
         .select('pays_as, name')
@@ -324,7 +332,7 @@ const Index = () => {
 
       const existingPaysAs = new Set(existingTenants?.map(t => t.pays_as) || []);
       
-      const tenants = data.map(record => ({
+      const tenants = uniqueData.map(record => ({
         name: record.Name || record.TenantName || record['Pays as'],
         pays_as: record['Pays as'],
         expected_rent: record.ExpectedRent,

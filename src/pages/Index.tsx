@@ -306,6 +306,17 @@ const Index = () => {
           'Actual Paid Amount': groupActualTotal,
           'Paid Matches (Y/N)': '',
         });
+        // Add empty row for spacing
+        exportData.push({
+          'Apt': '',
+          'Room No': '',
+          'Tenant Name': '',
+          'Email Address': '',
+          'Phone': '',
+          'Expected Rent': '',
+          'Actual Paid Amount': '',
+          'Paid Matches (Y/N)': '',
+        });
         groupExpectedTotal = 0;
         groupActualTotal = 0;
       }
@@ -336,6 +347,17 @@ const Index = () => {
           'Phone': '',
           'Expected Rent': groupExpectedTotal,
           'Actual Paid Amount': groupActualTotal,
+          'Paid Matches (Y/N)': '',
+        });
+        // Add empty row after last group
+        exportData.push({
+          'Apt': '',
+          'Room No': '',
+          'Tenant Name': '',
+          'Email Address': '',
+          'Phone': '',
+          'Expected Rent': '',
+          'Actual Paid Amount': '',
           'Paid Matches (Y/N)': '',
         });
       }

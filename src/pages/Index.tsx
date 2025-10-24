@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calculator, FileText, TrendingUp, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 interface BankRecord {
   Description: string;
@@ -277,7 +277,7 @@ const Index = () => {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     // Sort by apartment
     const sortedResults = [...reconciliationResults].sort((a, b) => {
       const aptA = a.apt || '';
@@ -285,8 +285,32 @@ const Index = () => {
       return aptA.localeCompare(aptB);
     });
 
-    // Group by apartment and create rows with subtotals
-    const exportData: any[] = [];
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Reconciliation');
+
+    // Add headers
+    worksheet.columns = [
+      { header: 'Apt', key: 'apt', width: 10 },
+      { header: 'Room No', key: 'roomNo', width: 12 },
+      { header: 'Tenant Name', key: 'tenantName', width: 20 },
+      { header: 'Email Address', key: 'email', width: 25 },
+      { header: 'Phone', key: 'phone', width: 15 },
+      { header: 'Expected Rent', key: 'expectedRent', width: 15 },
+      { header: 'Actual Paid Amount', key: 'actualPaid', width: 18 },
+      { header: 'Paid Matches (Y/N)', key: 'paidMatches', width: 18 },
+    ];
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' }
+    };
+    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Group by apartment and add rows
     let currentApt = '';
     let groupExpectedTotal = 0;
     let groupActualTotal = 0;
@@ -296,27 +320,26 @@ const Index = () => {
       
       // If apartment changes, add subtotal for previous group
       if (currentApt !== '' && currentApt !== apt) {
-        exportData.push({
-          'Apt': `${currentApt} Subtotal`,
-          'Room No': '',
-          'Tenant Name': '',
-          'Email Address': '',
-          'Phone': '',
-          'Expected Rent': groupExpectedTotal,
-          'Actual Paid Amount': groupActualTotal,
-          'Paid Matches (Y/N)': '',
+        const subtotalRow = worksheet.addRow({
+          apt: `${currentApt} Subtotal`,
+          roomNo: '',
+          tenantName: '',
+          email: '',
+          phone: '',
+          expectedRent: groupExpectedTotal,
+          actualPaid: groupActualTotal,
+          paidMatches: '',
         });
-        // Add empty row for spacing
-        exportData.push({
-          'Apt': '',
-          'Room No': '',
-          'Tenant Name': '',
-          'Email Address': '',
-          'Phone': '',
-          'Expected Rent': '',
-          'Actual Paid Amount': '',
-          'Paid Matches (Y/N)': '',
-        });
+        subtotalRow.font = { bold: true };
+        subtotalRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE7E6E6' }
+        };
+        
+        // Add empty row
+        worksheet.addRow({});
+        
         groupExpectedTotal = 0;
         groupActualTotal = 0;
       }
@@ -326,149 +349,86 @@ const Index = () => {
       groupActualTotal += match.actualAmount;
 
       // Add regular row
-      exportData.push({
-        'Apt': match.apt || '',
-        'Room No': match.roomNo || '',
-        'Tenant Name': match.tenantName,
-        'Email Address': match.email || '',
-        'Phone': match.phone || '',
-        'Expected Rent': match.expectedRent,
-        'Actual Paid Amount': match.actualAmount,
-        'Paid Matches (Y/N)': match.status === 'match' ? 'Y' : 'N',
+      const row = worksheet.addRow({
+        apt: match.apt || '',
+        roomNo: match.roomNo || '',
+        tenantName: match.tenantName,
+        email: match.email || '',
+        phone: match.phone || '',
+        expectedRent: match.expectedRent,
+        actualPaid: match.actualAmount,
+        paidMatches: match.status === 'match' ? 'Y' : 'N',
       });
+
+      // Format currency cells
+      row.getCell(6).numFmt = '$#,##0.00';
+      row.getCell(7).numFmt = '$#,##0.00';
+
+      // Apply Y/N conditional formatting
+      const matchCell = row.getCell(8);
+      if (match.status === 'match') {
+        matchCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFC6EFCE' }
+        };
+        matchCell.font = { bold: true, color: { argb: 'FF006100' } };
+      } else {
+        matchCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFC7CE' }
+        };
+        matchCell.font = { bold: true, color: { argb: 'FF9C0006' } };
+      }
+      matchCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
       // Add subtotal for last group
       if (index === sortedResults.length - 1) {
-        exportData.push({
-          'Apt': `${currentApt} Subtotal`,
-          'Room No': '',
-          'Tenant Name': '',
-          'Email Address': '',
-          'Phone': '',
-          'Expected Rent': groupExpectedTotal,
-          'Actual Paid Amount': groupActualTotal,
-          'Paid Matches (Y/N)': '',
+        const subtotalRow = worksheet.addRow({
+          apt: `${currentApt} Subtotal`,
+          roomNo: '',
+          tenantName: '',
+          email: '',
+          phone: '',
+          expectedRent: groupExpectedTotal,
+          actualPaid: groupActualTotal,
+          paidMatches: '',
         });
-        // Add empty row after last group
-        exportData.push({
-          'Apt': '',
-          'Room No': '',
-          'Tenant Name': '',
-          'Email Address': '',
-          'Phone': '',
-          'Expected Rent': '',
-          'Actual Paid Amount': '',
-          'Paid Matches (Y/N)': '',
-        });
+        subtotalRow.font = { bold: true };
+        subtotalRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE7E6E6' }
+        };
+        
+        // Add empty row
+        worksheet.addRow({});
       }
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    
-    // Set column widths
-    worksheet['!cols'] = [
-      { wch: 10 }, // Apt
-      { wch: 12 }, // Room No
-      { wch: 20 }, // Tenant Name
-      { wch: 25 }, // Email
-      { wch: 15 }, // Phone
-      { wch: 15 }, // Expected Rent
-      { wch: 18 }, // Actual Paid Amount
-      { wch: 18 }, // Paid Matches
-    ];
-
-    // Style the header row
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
-      if (!worksheet[cellAddress]) continue;
-      
-      worksheet[cellAddress].s = {
-        font: { bold: true, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: "4472C4" } },
-        alignment: { horizontal: "center", vertical: "center" },
-        border: {
-          top: { style: "thin", color: { rgb: "000000" } },
-          bottom: { style: "thin", color: { rgb: "000000" } },
-          left: { style: "thin", color: { rgb: "000000" } },
-          right: { style: "thin", color: { rgb: "000000" } }
-        }
-      };
-    }
-
-    // Add borders and formatting to data rows
-    for (let row = range.s.r + 1; row <= range.e.r; row++) {
-      // Check if this is a subtotal or empty row
-      const aptCell = worksheet[XLSX.utils.encode_cell({ r: row, c: 0 })];
-      const isSubtotalRow = aptCell && aptCell.v && String(aptCell.v).includes('Subtotal');
-      const isEmptyRow = !aptCell || !aptCell.v || String(aptCell.v).trim() === '';
-      
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-        if (!worksheet[cellAddress]) continue;
-
-        // Apply borders to all cells
-        worksheet[cellAddress].s = {
-          border: {
-            top: { style: "thin", color: { rgb: "D0D0D0" } },
-            bottom: { style: "thin", color: { rgb: "D0D0D0" } },
-            left: { style: "thin", color: { rgb: "D0D0D0" } },
-            right: { style: "thin", color: { rgb: "D0D0D0" } }
-          },
-          alignment: { vertical: "center" }
+    // Apply borders to all cells
+    worksheet.eachRow((row) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+          left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+          bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+          right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
         };
+      });
+    });
 
-        // Format subtotal rows with bold and background color
-        if (isSubtotalRow) {
-          worksheet[cellAddress].s = {
-            ...worksheet[cellAddress].s,
-            font: { bold: true },
-            fill: { fgColor: { rgb: "E7E6E6" } },
-          };
-        }
-
-        // Format currency columns (Expected Rent and Actual Paid Amount)
-        if (col === 5 || col === 6) {
-          worksheet[cellAddress].z = '$#,##0.00';
-        }
-
-        // Conditional formatting for Paid Matches column (Y/N) - only for regular rows
-        if (col === 7 && !isSubtotalRow && !isEmptyRow) {
-          const value = worksheet[cellAddress].v;
-          if (value === 'Y') {
-            worksheet[cellAddress].s = {
-              border: {
-                top: { style: "thin", color: { rgb: "D0D0D0" } },
-                bottom: { style: "thin", color: { rgb: "D0D0D0" } },
-                left: { style: "thin", color: { rgb: "D0D0D0" } },
-                right: { style: "thin", color: { rgb: "D0D0D0" } }
-              },
-              fill: { fgColor: { rgb: "C6EFCE" } },
-              font: { color: { rgb: "006100" }, bold: true },
-              alignment: { horizontal: "center", vertical: "center" }
-            };
-          } else if (value === 'N') {
-            worksheet[cellAddress].s = {
-              border: {
-                top: { style: "thin", color: { rgb: "D0D0D0" } },
-                bottom: { style: "thin", color: { rgb: "D0D0D0" } },
-                left: { style: "thin", color: { rgb: "D0D0D0" } },
-                right: { style: "thin", color: { rgb: "D0D0D0" } }
-              },
-              fill: { fgColor: { rgb: "FFC7CE" } },
-              font: { color: { rgb: "9C0006" }, bold: true },
-              alignment: { horizontal: "center", vertical: "center" }
-            };
-          }
-        }
-      }
-    }
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reconciliation');
-    
+    // Export file
     const date = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(workbook, `Reconciliation_${date}.xlsx`, { cellStyles: true });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Reconciliation_${date}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
 
     toast({
       title: "Export successful",

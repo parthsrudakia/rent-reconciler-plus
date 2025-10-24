@@ -291,14 +291,14 @@ const Index = () => {
 
     // Add headers
     worksheet.columns = [
-      { header: 'Apt', key: 'apt', width: 10 },
+      { header: 'Apt', key: 'apt', width: 12 },
       { header: 'Room No', key: 'roomNo', width: 12 },
-      { header: 'Tenant Name', key: 'tenantName', width: 20 },
-      { header: 'Email Address', key: 'email', width: 25 },
-      { header: 'Phone', key: 'phone', width: 15 },
-      { header: 'Expected Rent', key: 'expectedRent', width: 15 },
-      { header: 'Actual Paid Amount', key: 'actualPaid', width: 18 },
-      { header: 'Paid Matches (Y/N)', key: 'paidMatches', width: 18 },
+      { header: 'Tenant Name', key: 'tenantName', width: 25 },
+      { header: 'Email Address', key: 'email', width: 30 },
+      { header: 'Phone', key: 'phone', width: 18 },
+      { header: 'Expected Rent', key: 'expectedRent', width: 18 },
+      { header: 'Actual Paid Amount', key: 'actualPaid', width: 22 },
+      { header: 'Paid Matches (Y/N)', key: 'paidMatches', width: 20 },
     ];
 
     // Style header row

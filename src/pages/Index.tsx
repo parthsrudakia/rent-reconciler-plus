@@ -291,7 +291,7 @@ const Index = () => {
 
     // Add headers
     worksheet.columns = [
-      { header: 'Apt', key: 'apt', width: 12 },
+      { header: 'Apt', key: 'apt', width: 20 },
       { header: 'Room No', key: 'roomNo', width: 12 },
       { header: 'Tenant Name', key: 'tenantName', width: 25 },
       { header: 'Email Address', key: 'email', width: 30 },

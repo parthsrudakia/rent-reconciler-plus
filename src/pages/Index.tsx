@@ -278,16 +278,68 @@ const Index = () => {
   };
 
   const exportToExcel = () => {
-    const exportData = reconciliationResults.map(match => ({
-      'Apt': match.apt || '',
-      'Room No': match.roomNo || '',
-      'Tenant Name': match.tenantName,
-      'Email Address': match.email || '',
-      'Phone': match.phone || '',
-      'Expected Rent': match.expectedRent,
-      'Actual Paid Amount': match.actualAmount,
-      'Paid Matches (Y/N)': match.status === 'match' ? 'Y' : 'N',
-    }));
+    // Sort by apartment
+    const sortedResults = [...reconciliationResults].sort((a, b) => {
+      const aptA = a.apt || '';
+      const aptB = b.apt || '';
+      return aptA.localeCompare(aptB);
+    });
+
+    // Group by apartment and create rows with subtotals
+    const exportData: any[] = [];
+    let currentApt = '';
+    let groupExpectedTotal = 0;
+    let groupActualTotal = 0;
+
+    sortedResults.forEach((match, index) => {
+      const apt = match.apt || '';
+      
+      // If apartment changes, add subtotal for previous group
+      if (currentApt !== '' && currentApt !== apt) {
+        exportData.push({
+          'Apt': `${currentApt} Subtotal`,
+          'Room No': '',
+          'Tenant Name': '',
+          'Email Address': '',
+          'Phone': '',
+          'Expected Rent': groupExpectedTotal,
+          'Actual Paid Amount': groupActualTotal,
+          'Paid Matches (Y/N)': '',
+        });
+        groupExpectedTotal = 0;
+        groupActualTotal = 0;
+      }
+
+      currentApt = apt;
+      groupExpectedTotal += match.expectedRent;
+      groupActualTotal += match.actualAmount;
+
+      // Add regular row
+      exportData.push({
+        'Apt': match.apt || '',
+        'Room No': match.roomNo || '',
+        'Tenant Name': match.tenantName,
+        'Email Address': match.email || '',
+        'Phone': match.phone || '',
+        'Expected Rent': match.expectedRent,
+        'Actual Paid Amount': match.actualAmount,
+        'Paid Matches (Y/N)': match.status === 'match' ? 'Y' : 'N',
+      });
+
+      // Add subtotal for last group
+      if (index === sortedResults.length - 1) {
+        exportData.push({
+          'Apt': `${currentApt} Subtotal`,
+          'Room No': '',
+          'Tenant Name': '',
+          'Email Address': '',
+          'Phone': '',
+          'Expected Rent': groupExpectedTotal,
+          'Actual Paid Amount': groupActualTotal,
+          'Paid Matches (Y/N)': '',
+        });
+      }
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     
@@ -328,6 +380,10 @@ const Index = () => {
         const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
         if (!worksheet[cellAddress]) continue;
 
+        // Check if this is a subtotal row
+        const aptCell = worksheet[XLSX.utils.encode_cell({ r: row, c: 0 })];
+        const isSubtotalRow = aptCell && aptCell.v && String(aptCell.v).includes('Subtotal');
+
         // Apply borders to all cells
         worksheet[cellAddress].s = {
           border: {
@@ -339,25 +395,36 @@ const Index = () => {
           alignment: { vertical: "center" }
         };
 
+        // Format subtotal rows with bold and background color
+        if (isSubtotalRow) {
+          worksheet[cellAddress].s = {
+            ...worksheet[cellAddress].s,
+            font: { bold: true },
+            fill: { fgColor: { rgb: "E7E6E6" } },
+          };
+        }
+
         // Format currency columns (Expected Rent and Actual Paid Amount)
         if (col === 5 || col === 6) {
           worksheet[cellAddress].z = '$#,##0.00';
         }
 
         // Conditional formatting for Paid Matches column (Y/N)
-        if (col === 7) {
+        if (col === 7 && !isSubtotalRow) {
           const value = worksheet[cellAddress].v;
-          worksheet[cellAddress].s = {
-            ...worksheet[cellAddress].s,
-            fill: { 
-              fgColor: { rgb: value === 'Y' ? "C6EFCE" : "FFC7CE" } 
-            },
-            font: { 
-              color: { rgb: value === 'Y' ? "006100" : "9C0006" },
-              bold: true
-            },
-            alignment: { horizontal: "center", vertical: "center" }
-          };
+          if (value === 'Y' || value === 'N') {
+            worksheet[cellAddress].s = {
+              ...worksheet[cellAddress].s,
+              fill: { 
+                fgColor: { rgb: value === 'Y' ? "C6EFCE" : "FFC7CE" } 
+              },
+              font: { 
+                color: { rgb: value === 'Y' ? "006100" : "9C0006" },
+                bold: true
+              },
+              alignment: { horizontal: "center", vertical: "center" }
+            };
+          }
         }
       }
     }

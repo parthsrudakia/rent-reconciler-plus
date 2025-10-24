@@ -398,13 +398,14 @@ const Index = () => {
 
     // Add borders and formatting to data rows
     for (let row = range.s.r + 1; row <= range.e.r; row++) {
+      // Check if this is a subtotal or empty row
+      const aptCell = worksheet[XLSX.utils.encode_cell({ r: row, c: 0 })];
+      const isSubtotalRow = aptCell && aptCell.v && String(aptCell.v).includes('Subtotal');
+      const isEmptyRow = !aptCell || !aptCell.v || String(aptCell.v).trim() === '';
+      
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
         if (!worksheet[cellAddress]) continue;
-
-        // Check if this is a subtotal row
-        const aptCell = worksheet[XLSX.utils.encode_cell({ r: row, c: 0 })];
-        const isSubtotalRow = aptCell && aptCell.v && String(aptCell.v).includes('Subtotal');
 
         // Apply borders to all cells
         worksheet[cellAddress].s = {
@@ -431,19 +432,31 @@ const Index = () => {
           worksheet[cellAddress].z = '$#,##0.00';
         }
 
-        // Conditional formatting for Paid Matches column (Y/N)
-        if (col === 7 && !isSubtotalRow) {
+        // Conditional formatting for Paid Matches column (Y/N) - only for regular rows
+        if (col === 7 && !isSubtotalRow && !isEmptyRow) {
           const value = worksheet[cellAddress].v;
-          if (value === 'Y' || value === 'N') {
+          if (value === 'Y') {
             worksheet[cellAddress].s = {
-              ...worksheet[cellAddress].s,
-              fill: { 
-                fgColor: { rgb: value === 'Y' ? "C6EFCE" : "FFC7CE" } 
+              border: {
+                top: { style: "thin", color: { rgb: "D0D0D0" } },
+                bottom: { style: "thin", color: { rgb: "D0D0D0" } },
+                left: { style: "thin", color: { rgb: "D0D0D0" } },
+                right: { style: "thin", color: { rgb: "D0D0D0" } }
               },
-              font: { 
-                color: { rgb: value === 'Y' ? "006100" : "9C0006" },
-                bold: true
+              fill: { fgColor: { rgb: "C6EFCE" } },
+              font: { color: { rgb: "006100" }, bold: true },
+              alignment: { horizontal: "center", vertical: "center" }
+            };
+          } else if (value === 'N') {
+            worksheet[cellAddress].s = {
+              border: {
+                top: { style: "thin", color: { rgb: "D0D0D0" } },
+                bottom: { style: "thin", color: { rgb: "D0D0D0" } },
+                left: { style: "thin", color: { rgb: "D0D0D0" } },
+                right: { style: "thin", color: { rgb: "D0D0D0" } }
               },
+              fill: { fgColor: { rgb: "FFC7CE" } },
+              font: { color: { rgb: "9C0006" }, bold: true },
               alignment: { horizontal: "center", vertical: "center" }
             };
           }

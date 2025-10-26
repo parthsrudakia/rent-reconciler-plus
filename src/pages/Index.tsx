@@ -567,8 +567,9 @@ const Index = () => {
               <TabsContent value="tenants" className="mt-6">
                 <FileUpload
                   title="Tenant Information"
-                  description="CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
+                  description="Excel or CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
                   onFileSelect={(file) => handleFileUpload(file, 'tenant')}
+                  acceptedTypes=".csv,.xlsx,.xls"
                   isUploaded={!!tenantFile}
                   fileName={tenantFile?.name}
                 />

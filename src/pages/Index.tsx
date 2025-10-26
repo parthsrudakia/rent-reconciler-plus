@@ -185,20 +185,46 @@ const Index = () => {
         // Trim whitespace and convert to lowercase for matching
         description = description.trim().toLowerCase();
         
+        // Clean and convert amount to number
+        const rawAmount = record.Amount;
+        let amount: number;
+        
+        if (typeof rawAmount === 'string') {
+          const cleanAmount = rawAmount.replace(/,/g, '').replace(/\$/g, '');
+          amount = parseFloat(cleanAmount) || 0;
+        } else if (typeof rawAmount === 'number') {
+          amount = rawAmount;
+        } else {
+          amount = 0;
+        }
+        
         return {
           Date: '', // Other payments don't have dates
           Description: description,
-          Amount: parseFloat(record.Amount) || 0
+          Amount: amount
         };
       });
   };
 
   const preprocessTenantData = (data: TenantRecord[]): TenantRecord[] => {
     return data.map(record => {
+      // Clean and convert ExpectedRent to number
+      const rawRent = record.ExpectedRent || record['Expected Rent'] || 0;
+      let expectedRent: number;
+      
+      if (typeof rawRent === 'string') {
+        const cleanRent = rawRent.replace(/,/g, '').replace(/\$/g, '');
+        expectedRent = parseFloat(cleanRent) || 0;
+      } else if (typeof rawRent === 'number') {
+        expectedRent = rawRent;
+      } else {
+        expectedRent = 0;
+      }
+      
       return {
         Name: record.Name || record.TenantName || '',
         'Pays as': (record['Pays As'] || record['Pays as'] || '').toLowerCase(),
-        ExpectedRent: record.ExpectedRent || record['Expected Rent'] || 0,
+        ExpectedRent: expectedRent,
         Email: record.Email || record.email || '',
         Phone: record.Phone || record.phone || record['Phone Number'] || '',
         Address: record.Address || record.address || '',

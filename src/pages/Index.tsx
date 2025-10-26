@@ -59,18 +59,36 @@ const Index = () => {
     const rows: any[] = [];
     const headers: string[] = [];
     
+    // Helper function to extract text from Excel cell values
+    const getCellText = (cellValue: any): string => {
+      if (!cellValue) return '';
+      
+      // Handle hyperlink objects
+      if (typeof cellValue === 'object' && cellValue.text !== undefined) {
+        return cellValue.text.toString();
+      }
+      
+      // Handle rich text objects
+      if (typeof cellValue === 'object' && cellValue.richText) {
+        return cellValue.richText.map((rt: any) => rt.text).join('');
+      }
+      
+      // Handle plain values
+      return cellValue.toString();
+    };
+    
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) {
         // First row is headers
         row.eachCell((cell) => {
-          headers.push(cell.value?.toString() || '');
+          headers.push(getCellText(cell.value));
         });
       } else {
         // Data rows
         const rowData: any = {};
         row.eachCell((cell, colNumber) => {
           const header = headers[colNumber - 1];
-          rowData[header] = cell.value;
+          rowData[header] = getCellText(cell.value);
         });
         rows.push(rowData);
       }

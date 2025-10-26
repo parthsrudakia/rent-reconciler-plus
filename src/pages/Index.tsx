@@ -179,7 +179,9 @@ const Index = () => {
       } else if (type === 'other') {
         // Don't skip rows for other statements
         const rawData = parseCSV(content, 0);
+        console.log('Raw Other Payment Data:', rawData);
         const processedData = preprocessOtherPaymentData(rawData);
+        console.log('Processed Other Payment Data:', processedData);
         setOtherStatementData(processedData);
         setOtherStatementFile(file);
         
@@ -232,6 +234,7 @@ const Index = () => {
     try {
       // Combine all statement data
       const allStatementData = [...bankData, ...otherStatementData];
+      console.log('All Statement Data:', allStatementData);
 
       // Group all transactions by Description and sum amounts
       const statementSummary = allStatementData.reduce((acc, record) => {
@@ -239,6 +242,7 @@ const Index = () => {
         acc[description] = (acc[description] || 0) + (record.Amount || 0);
         return acc;
       }, {} as Record<string, number>);
+      console.log('Statement Summary:', statementSummary);
 
       // Create reconciliation matches
       const matches: ReconciliationMatch[] = [];

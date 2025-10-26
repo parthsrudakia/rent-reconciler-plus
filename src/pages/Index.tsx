@@ -50,6 +50,35 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  const parseExcel = async (file: File): Promise<any[]> => {
+    const workbook = new ExcelJS.Workbook();
+    const arrayBuffer = await file.arrayBuffer();
+    await workbook.xlsx.load(arrayBuffer);
+    
+    const worksheet = workbook.worksheets[0];
+    const rows: any[] = [];
+    const headers: string[] = [];
+    
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) {
+        // First row is headers
+        row.eachCell((cell) => {
+          headers.push(cell.value?.toString() || '');
+        });
+      } else {
+        // Data rows
+        const rowData: any = {};
+        row.eachCell((cell, colNumber) => {
+          const header = headers[colNumber - 1];
+          rowData[header] = cell.value;
+        });
+        rows.push(rowData);
+      }
+    });
+    
+    return rows;
+  };
+
   const parseCSV = (content: string, skipRows: number = 0): Record<string, any>[] => {
     const lines = content.trim().split('\n');
     if (lines.length < skipRows + 2) return [];
@@ -163,10 +192,11 @@ const Index = () => {
 
   const handleFileUpload = async (file: File, type: 'bank' | 'other' | 'tenant') => {
     try {
-      const content = await file.text();
+      const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
       
       if (type === 'bank') {
-        // Skip 6 rows for bank statements
+        // Bank statements are always CSV
+        const content = await file.text();
         const rawData = parseCSV(content, 6);
         const processedData = preprocessBankData(rawData as BankRecord[]);
         setBankData(processedData);
@@ -177,8 +207,14 @@ const Index = () => {
           description: `Successfully loaded ${processedData.length} Zelle payment records`,
         });
       } else if (type === 'other') {
-        // Don't skip rows for other statements
-        const rawData = parseCSV(content, 0);
+        // Other payments can be CSV or Excel
+        let rawData;
+        if (isExcel) {
+          rawData = await parseExcel(file);
+        } else {
+          const content = await file.text();
+          rawData = parseCSV(content, 0);
+        }
         console.log('Raw Other Payment Data:', rawData);
         const processedData = preprocessOtherPaymentData(rawData);
         console.log('Processed Other Payment Data:', processedData);
@@ -190,7 +226,14 @@ const Index = () => {
           description: `Successfully loaded ${processedData.length} payment records`,
         });
       } else {
-        const rawData = parseCSV(content);
+        // Tenant data can be CSV or Excel
+        let rawData;
+        if (isExcel) {
+          rawData = await parseExcel(file);
+        } else {
+          const content = await file.text();
+          rawData = parseCSV(content);
+        }
         const processedData = preprocessTenantData(rawData as TenantRecord[]);
         setTenantData(processedData);
         setTenantFile(file);
@@ -513,8 +556,9 @@ const Index = () => {
               <TabsContent value="other-statements" className="mt-6">
                 <FileUpload
                   title="Other Payment Statements"
-                  description="CSV file with other payment sources (same format as bank statements)"
+                  description="Excel or CSV file with Description (tenant names) and Amount columns"
                   onFileSelect={(file) => handleFileUpload(file, 'other')}
+                  acceptedTypes=".csv,.xlsx,.xls"
                   isUploaded={!!otherStatementFile}
                   fileName={otherStatementFile?.name}
                 />

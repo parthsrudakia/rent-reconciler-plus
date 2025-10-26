@@ -129,6 +129,23 @@ const Index = () => {
       });
   };
 
+  const preprocessOtherPaymentData = (data: any[]): BankRecord[] => {
+    return data
+      .filter(record => record.Description && record.Amount)
+      .map((record: any) => {
+        let description = record.Description || '';
+        
+        // Trim whitespace and convert to lowercase for matching
+        description = description.trim().toLowerCase();
+        
+        return {
+          Date: '', // Other payments don't have dates
+          Description: description,
+          Amount: parseFloat(record.Amount) || 0
+        };
+      });
+  };
+
   const preprocessTenantData = (data: TenantRecord[]): TenantRecord[] => {
     return data.map(record => {
       return {
@@ -162,7 +179,7 @@ const Index = () => {
       } else if (type === 'other') {
         // Don't skip rows for other statements
         const rawData = parseCSV(content, 0);
-        const processedData = preprocessBankData(rawData as BankRecord[]);
+        const processedData = preprocessOtherPaymentData(rawData);
         setOtherStatementData(processedData);
         setOtherStatementFile(file);
         

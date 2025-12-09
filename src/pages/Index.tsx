@@ -386,11 +386,23 @@ const Index = () => {
   };
 
   const exportToExcel = async () => {
-    // Sort by apartment
+    // Keep results in the same order as tenant file (already ordered by tenantData.forEach)
+    // Group by apartment while preserving original order
+    const aptOrder = new Map<string, number>();
+    reconciliationResults.forEach((match, index) => {
+      const apt = match.apt || '';
+      if (!aptOrder.has(apt)) {
+        aptOrder.set(apt, index);
+      }
+    });
+    
+    // Sort by first appearance of each apartment in tenant file
     const sortedResults = [...reconciliationResults].sort((a, b) => {
       const aptA = a.apt || '';
       const aptB = b.apt || '';
-      return aptA.localeCompare(aptB);
+      const orderA = aptOrder.get(aptA) ?? 0;
+      const orderB = aptOrder.get(aptB) ?? 0;
+      return orderA - orderB;
     });
 
     // Create workbook and worksheet

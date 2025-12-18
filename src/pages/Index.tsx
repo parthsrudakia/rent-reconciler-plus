@@ -411,6 +411,7 @@ const Index = () => {
 
     // Add headers
     worksheet.columns = [
+      { header: '#', key: 'index', width: 5 },
       { header: 'Apt', key: 'apt', width: 20 },
       { header: 'Room No', key: 'roomNo', width: 12 },
       { header: 'Tenant Name', key: 'tenantName', width: 25 },
@@ -434,6 +435,8 @@ const Index = () => {
     let currentApt = '';
     let groupExpectedTotal = 0;
     let groupActualTotal = 0;
+    let aptIndex = 0;
+    let isFirstRowOfGroup = true;
 
     sortedResults.forEach((match, index) => {
       const apt = match.apt || '';
@@ -441,6 +444,7 @@ const Index = () => {
       // If apartment changes, add subtotal for previous group
       if (currentApt !== '' && currentApt !== apt) {
         const subtotalRow = worksheet.addRow({
+          index: '',
           apt: `${currentApt} Subtotal`,
           roomNo: '',
           tenantName: '',
@@ -462,6 +466,12 @@ const Index = () => {
         
         groupExpectedTotal = 0;
         groupActualTotal = 0;
+        isFirstRowOfGroup = true;
+      }
+
+      // Increment apt index on first row of new group
+      if (currentApt !== apt) {
+        aptIndex++;
       }
 
       currentApt = apt;
@@ -470,6 +480,7 @@ const Index = () => {
 
       // Add regular row
       const row = worksheet.addRow({
+        index: isFirstRowOfGroup ? aptIndex : '',
         apt: match.apt || '',
         roomNo: match.roomNo || '',
         tenantName: match.tenantName,
@@ -480,12 +491,14 @@ const Index = () => {
         paidMatches: match.status === 'match' ? 'Y' : 'N',
       });
 
+      isFirstRowOfGroup = false;
+
       // Format currency cells
-      row.getCell(6).numFmt = '$#,##0.00';
       row.getCell(7).numFmt = '$#,##0.00';
+      row.getCell(8).numFmt = '$#,##0.00';
 
       // Apply Y/N conditional formatting
-      const matchCell = row.getCell(8);
+      const matchCell = row.getCell(9);
       if (match.status === 'match') {
         matchCell.fill = {
           type: 'pattern',
@@ -506,6 +519,7 @@ const Index = () => {
       // Add subtotal for last group
       if (index === sortedResults.length - 1) {
         const subtotalRow = worksheet.addRow({
+          index: '',
           apt: `${currentApt} Subtotal`,
           roomNo: '',
           tenantName: '',

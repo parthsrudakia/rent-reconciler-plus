@@ -579,41 +579,62 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen gradient-subtle">
       {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <Calculator className="h-8 w-8 text-primary" />
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-5">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl gradient-primary shadow-glow">
+              <Calculator className="h-7 w-7 text-primary-foreground" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold">Rent Reconciliation</h1>
-              <p className="text-muted-foreground">Match bank transactions with tenant payments and identify discrepancies</p>
+              <h1 className="text-2xl font-bold tracking-tight">Rent Reconciliation</h1>
+              <p className="text-sm text-muted-foreground">Match transactions with tenant payments</p>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 py-8 space-y-8">
         {/* File Upload Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Data Upload
-            </CardTitle>
-            <CardDescription>
-              Upload your monthly bank transactions and tenant information files
-            </CardDescription>
+        <Card className="border-border/50 shadow-card overflow-hidden animate-fade-in">
+          <CardHeader className="border-b border-border/50 bg-muted/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Data Upload</CardTitle>
+                <CardDescription>
+                  Upload your monthly bank transactions and tenant information files
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Tabs defaultValue="statements" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="statements">Statements</TabsTrigger>
-                <TabsTrigger value="other-statements">Other Statements</TabsTrigger>
-                <TabsTrigger value="tenants">Tenant Information</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-lg mb-6">
+                <TabsTrigger 
+                  value="statements"
+                  className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all"
+                >
+                  Bank Statements
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="other-statements"
+                  className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all"
+                >
+                  Other Statements
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tenants"
+                  className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all"
+                >
+                  Tenant Info
+                </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="statements" className="mt-6">
+              <TabsContent value="statements" className="mt-0 animate-fade-in">
                 <FileUpload
                   title="Bank Statements"
                   description="CSV file with bank transactions (will skip 6 header rows)"
@@ -623,7 +644,7 @@ const Index = () => {
                 />
               </TabsContent>
               
-              <TabsContent value="other-statements" className="mt-6">
+              <TabsContent value="other-statements" className="mt-0 animate-fade-in">
                 <FileUpload
                   title="Other Payment Statements"
                   description="Excel or CSV file with Description (tenant names) and Amount columns"
@@ -634,7 +655,7 @@ const Index = () => {
                 />
               </TabsContent>
               
-              <TabsContent value="tenants" className="mt-6">
+              <TabsContent value="tenants" className="mt-0 animate-fade-in">
                 <FileUpload
                   title="Tenant Information"
                   description="Excel or CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
@@ -648,15 +669,15 @@ const Index = () => {
             
             {(bankData.length > 0 || otherStatementData.length > 0) && tenantData.length > 0 && (
               <>
-                <Separator className="my-6" />
+                <Separator className="my-8" />
                 <div className="flex justify-center">
                   <Button 
                     onClick={performReconciliation}
                     disabled={isProcessing}
                     size="lg"
-                    className="flex items-center gap-2"
+                    className="gradient-primary text-primary-foreground shadow-glow hover:shadow-lg transition-all px-8 py-6 text-base font-semibold"
                   >
-                    <TrendingUp className="h-4 w-4" />
+                    <TrendingUp className="h-5 w-5 mr-2" />
                     {isProcessing ? 'Processing...' : 'Run Reconciliation'}
                   </Button>
                 </div>
@@ -667,14 +688,14 @@ const Index = () => {
 
         {/* Reconciliation Results */}
         {reconciliationResults.length > 0 && (
-          <>
+          <div className="space-y-6 animate-slide-up">
             <div className="flex justify-end">
               <Button 
                 onClick={exportToExcel}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="border-primary/30 hover:bg-primary/5 hover:border-primary/50 transition-all"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4 mr-2" />
                 Export to Excel
               </Button>
             </div>
@@ -682,9 +703,9 @@ const Index = () => {
               matches={reconciliationResults} 
               summary={summary}
             />
-          </>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

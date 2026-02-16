@@ -579,141 +579,102 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen relative">
-      {/* Animated background gradient mesh */}
-      <div className="fixed inset-0 gradient-mesh pointer-events-none" />
-      
-      {/* Floating orbs */}
-      <div className="fixed top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-[100px] animate-float pointer-events-none" />
-      <div className="fixed bottom-20 right-20 w-96 h-96 bg-accent/10 rounded-full blur-[120px] animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
-      <div className="fixed top-1/2 left-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] animate-pulse-slow pointer-events-none" />
-
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-strong">
-        <div className="container mx-auto px-6 py-5">
-          <div className="flex items-center gap-5">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-2xl gradient-primary blur-md opacity-60 animate-glow" />
-              <div className="relative p-3.5 rounded-2xl gradient-primary">
-                <Calculator className="h-7 w-7 text-primary-foreground" />
-              </div>
-            </div>
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center gap-3">
+            <Calculator className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gradient">Rent Reconciliation</h1>
-              <p className="text-sm text-muted-foreground">Match transactions with tenant payments</p>
+              <h1 className="text-3xl font-bold">Rent Reconciliation</h1>
+              <p className="text-muted-foreground">Match bank transactions with tenant payments and identify discrepancies</p>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="relative container mx-auto px-6 py-10 space-y-10">
+      <div className="container mx-auto px-4 py-8 space-y-8">
         {/* File Upload Section */}
-        <div className="relative animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 opacity-50 blur-sm" />
-          <div className="relative glass rounded-3xl overflow-hidden">
-            <div className="p-6 border-b border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">Data Upload</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Upload your monthly bank transactions and tenant information files
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <Tabs defaultValue="statements" className="w-full">
-                <TabsList className="w-full grid grid-cols-3 bg-secondary/50 p-1.5 rounded-xl mb-8">
-                  <TabsTrigger 
-                    value="statements"
-                    className="data-[state=active]:bg-card data-[state=active]:glow-sm rounded-lg font-medium transition-all"
-                  >
-                    Bank Statements
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="other-statements"
-                    className="data-[state=active]:bg-card data-[state=active]:glow-sm rounded-lg font-medium transition-all"
-                  >
-                    Other Statements
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="tenants"
-                    className="data-[state=active]:bg-card data-[state=active]:glow-sm rounded-lg font-medium transition-all"
-                  >
-                    Tenant Info
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="statements" className="mt-0">
-                  <FileUpload
-                    title="Bank Statements"
-                    description="CSV file with bank transactions (will skip 6 header rows)"
-                    onFileSelect={(file) => handleFileUpload(file, 'bank')}
-                    isUploaded={!!bankFile}
-                    fileName={bankFile?.name}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="other-statements" className="mt-0">
-                  <FileUpload
-                    title="Other Payment Statements"
-                    description="Excel or CSV file with Description (tenant names) and Amount columns"
-                    onFileSelect={(file) => handleFileUpload(file, 'other')}
-                    acceptedTypes=".csv,.xlsx,.xls"
-                    isUploaded={!!otherStatementFile}
-                    fileName={otherStatementFile?.name}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="tenants" className="mt-0">
-                  <FileUpload
-                    title="Tenant Information"
-                    description="Excel or CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
-                    onFileSelect={(file) => handleFileUpload(file, 'tenant')}
-                    acceptedTypes=".csv,.xlsx,.xls"
-                    isUploaded={!!tenantFile}
-                    fileName={tenantFile?.name}
-                  />
-                </TabsContent>
-              </Tabs>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Data Upload
+            </CardTitle>
+            <CardDescription>
+              Upload your monthly bank transactions and tenant information files
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="statements" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="statements">Statements</TabsTrigger>
+                <TabsTrigger value="other-statements">Other Statements</TabsTrigger>
+                <TabsTrigger value="tenants">Tenant Information</TabsTrigger>
+              </TabsList>
               
-              {(bankData.length > 0 || otherStatementData.length > 0) && tenantData.length > 0 && (
-                <>
-                  <Separator className="my-8 opacity-30" />
-                  <div className="flex justify-center">
-                    <div className="relative group">
-                      <div className="absolute -inset-1 rounded-2xl gradient-primary opacity-60 blur-md group-hover:opacity-80 transition-opacity animate-glow" />
-                      <Button 
-                        onClick={performReconciliation}
-                        disabled={isProcessing}
-                        size="lg"
-                        className="relative gradient-primary text-primary-foreground font-bold px-10 py-7 text-lg rounded-xl transition-transform hover:scale-[1.02]"
-                      >
-                        <TrendingUp className="h-5 w-5 mr-3" />
-                        {isProcessing ? 'Processing...' : 'Run Reconciliation'}
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+              <TabsContent value="statements" className="mt-6">
+                <FileUpload
+                  title="Bank Statements"
+                  description="CSV file with bank transactions (will skip 6 header rows)"
+                  onFileSelect={(file) => handleFileUpload(file, 'bank')}
+                  isUploaded={!!bankFile}
+                  fileName={bankFile?.name}
+                />
+              </TabsContent>
+              
+              <TabsContent value="other-statements" className="mt-6">
+                <FileUpload
+                  title="Other Payment Statements"
+                  description="Excel or CSV file with Description (tenant names) and Amount columns"
+                  onFileSelect={(file) => handleFileUpload(file, 'other')}
+                  acceptedTypes=".csv,.xlsx,.xls"
+                  isUploaded={!!otherStatementFile}
+                  fileName={otherStatementFile?.name}
+                />
+              </TabsContent>
+              
+              <TabsContent value="tenants" className="mt-6">
+                <FileUpload
+                  title="Tenant Information"
+                  description="Excel or CSV file with tenant data (must have 'Pays as' and ExpectedRent columns)"
+                  onFileSelect={(file) => handleFileUpload(file, 'tenant')}
+                  acceptedTypes=".csv,.xlsx,.xls"
+                  isUploaded={!!tenantFile}
+                  fileName={tenantFile?.name}
+                />
+              </TabsContent>
+            </Tabs>
+            
+            {(bankData.length > 0 || otherStatementData.length > 0) && tenantData.length > 0 && (
+              <>
+                <Separator className="my-6" />
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={performReconciliation}
+                    disabled={isProcessing}
+                    size="lg"
+                    className="flex items-center gap-2"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    {isProcessing ? 'Processing...' : 'Run Reconciliation'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Reconciliation Results */}
         {reconciliationResults.length > 0 && (
-          <div className="space-y-8 animate-slide-up">
+          <>
             <div className="flex justify-end">
               <Button 
                 onClick={exportToExcel}
                 variant="outline"
-                className="border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 font-medium transition-all"
+                className="flex items-center gap-2"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4" />
                 Export to Excel
               </Button>
             </div>
@@ -721,9 +682,9 @@ const Index = () => {
               matches={reconciliationResults} 
               summary={summary}
             />
-          </div>
+          </>
         )}
-      </main>
+      </div>
     </div>
   );
 };

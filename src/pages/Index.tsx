@@ -126,18 +126,10 @@ const Index = () => {
   const preprocessBankData = (data: any[]): BankRecord[] => {
     return data
       .map((record: any) => {
-        // Clean Amount field (remove commas and dollar signs, convert to number)
-        const rawAmount = record.Amount;
-        let amount: number;
-        
-        if (typeof rawAmount === 'string') {
-          const cleanAmount = rawAmount.replace(/,/g, '').replace(/\$/g, '');
-          amount = parseFloat(cleanAmount) || 0;
-        } else if (typeof rawAmount === 'number') {
-          amount = rawAmount;
-        } else {
-          amount = 0;
-        }
+        // Typecast Amount to Float/Number before any other processing
+        const amount = typeof record.Amount === 'string' 
+          ? parseFloat(record.Amount.replace(/[$,]/g, '')) || 0 
+          : Number(record.Amount) || 0;
         
         return { ...record, Amount: amount };
       })

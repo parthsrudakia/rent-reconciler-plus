@@ -601,9 +601,9 @@ const Index = () => {
           <div className="flex flex-col items-center text-center gap-2">
             <div className="flex items-center gap-2">
               <img 
-                src="https://storage.googleapis.com/gpt-engineer-file-uploads/Qc34guTaSaN5agqVAqLOn7p0QQG2/uploads/1758945841576-Screenshot 2025-02-10 at 4.57.34 PM.png" 
+                src="/hive-logo.svg" 
                 alt="HIVE Logo" 
-                className="h-12 w-12 object-contain"
+                className="h-10 w-10"
               />
               <h1 className="text-4xl font-bold tracking-tight">HIVE</h1>
             </div>

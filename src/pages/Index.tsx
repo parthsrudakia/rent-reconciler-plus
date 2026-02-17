@@ -598,14 +598,29 @@ const Index = () => {
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <Calculator className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Rent Reconciliation</h1>
-              <p className="text-muted-foreground">Match bank transactions with tenant payments and identify discrepancies</p>
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="flex items-center gap-2">
+              <img 
+                src="https://storage.googleapis.com/gpt-engineer-file-uploads/Qc34guTaSaN5agqVAqLOn7p0QQG2/uploads/1758945841576-Screenshot 2025-02-10 at 4.57.34 PM.png" 
+                alt="HIVE Logo" 
+                className="h-12 w-12 object-contain"
+              />
+              <h1 className="text-4xl font-bold tracking-tight">HIVE</h1>
             </div>
+            <p className="text-muted-foreground text-sm">
+              New York Living <span className="border border-foreground rounded px-2 py-0.5 text-foreground font-medium">Made Simple</span>
+            </p>
           </div>
         </div>
+      </div>
+
+      {/* Sub-header */}
+      <div className="container mx-auto px-4 pt-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Calculator className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Rent Reconciliation</h2>
+        </div>
+        <p className="text-muted-foreground text-sm">Match bank transactions with tenant payments and identify discrepancies</p>
       </div>
 
       <div className="container mx-auto px-4 py-8 space-y-8">

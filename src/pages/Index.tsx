@@ -608,7 +608,7 @@ const Index = () => {
               <h1 className="text-4xl font-bold tracking-tight">HIVE</h1>
             </div>
             <p className="text-muted-foreground text-sm">
-              New York Living <span className="border border-foreground rounded px-2 py-0.5 text-foreground font-medium">Made Simple</span>
+              City Living <span className="border border-foreground rounded px-2 py-0.5 text-foreground font-medium">Made Simple</span>
             </p>
           </div>
         </div>

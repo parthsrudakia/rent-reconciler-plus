@@ -97,22 +97,45 @@ const Index = () => {
     return rows;
   };
 
+  const parseCSVLine = (line: string): string[] => {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++; // skip escaped quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    return values;
+  };
+
   const parseCSV = (content: string, skipRows: number = 0): Record<string, any>[] => {
     const lines = content.trim().split('\n');
     if (lines.length < skipRows + 2) return [];
     
-    // Skip the specified number of rows
     const relevantLines = lines.slice(skipRows);
-    const headers = relevantLines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const headers = parseCSVLine(relevantLines[0]).map(h => h.replace(/"/g, ''));
     
     return relevantLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+      const values = parseCSVLine(line);
       const record: Record<string, any> = {};
       
       headers.forEach((header, index) => {
         const value = values[index] || '';
-        // Try to parse as number if it looks like a currency or number
-        if (/^\$?[\d,]+\.?\d*$/.test(value.replace(/^\$/, ''))) {
+        if (/^-?\$?[\d,]+\.?\d*$/.test(value.replace(/^\$/, '').replace(/^-/, ''))) {
           record[header] = parseFloat(value.replace(/[$,]/g, ''));
         } else {
           record[header] = value;

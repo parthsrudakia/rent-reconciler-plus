@@ -1,4 +1,5 @@
 import { useState } from "react";
+import hiveLogo from "@/assets/hive-logo.png";
 import { FileUpload } from "@/components/FileUpload";
 import { ReconciliationResults } from "@/components/ReconciliationResults";
 import { Button } from "@/components/ui/button";
@@ -599,17 +600,11 @@ const Index = () => {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col items-center text-center gap-2">
-            <div className="flex items-center gap-2">
-              <img 
-                src="/hive-logo.svg" 
-                alt="HIVE Logo" 
-                className="h-10 w-10"
-              />
-              <h1 className="text-4xl font-bold tracking-tight">HIVE</h1>
-            </div>
-            <p className="text-muted-foreground text-sm">
-              City Living <span className="border border-foreground rounded px-2 py-0.5 text-foreground font-medium">Made Simple</span>
-            </p>
+            <img 
+              src={hiveLogo} 
+              alt="HIVE - City Living Made Simple" 
+              className="h-24 object-contain"
+            />
           </div>
         </div>
       </div>

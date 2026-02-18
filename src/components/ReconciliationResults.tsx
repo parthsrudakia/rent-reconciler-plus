@@ -56,16 +56,16 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'USD'
     }).format(amount);
   };
 
   // Filter matches by status
-  const matchedItems = matches.filter(match => match.status === 'match');
-  const mismatchedItems = matches.filter(match => match.status === 'mismatch' || match.status === 'missing');
+  const matchedItems = matches.filter((match) => match.status === 'match');
+  const mismatchedItems = matches.filter((match) => match.status === 'mismatch' || match.status === 'missing');
 
-  const renderTable = (items: ReconciliationMatch[], emptyMessage: string) => (
-    <div className="rounded-lg border overflow-hidden">
+  const renderTable = (items: ReconciliationMatch[], emptyMessage: string) =>
+  <div className="rounded-lg border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -80,15 +80,15 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.length === 0 ? (
-            <TableRow>
+          {items.length === 0 ?
+        <TableRow>
               <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 {emptyMessage}
               </TableCell>
-            </TableRow>
-          ) : (
-            items.map((match, index) => (
-              <TableRow key={index}>
+            </TableRow> :
+
+        items.map((match, index) =>
+        <TableRow key={index}>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(match.status)}
@@ -106,17 +106,17 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
                   {formatCurrency(match.actualAmount)}
                 </TableCell>
                 <TableCell className={`text-right font-mono font-semibold ${
-                  match.difference === 0 ? 'text-success' : 'text-destructive'
-                }`}>
+          match.difference === 0 ? 'text-success' : 'text-destructive'}`
+          }>
                   {formatCurrency(match.difference)}
                 </TableCell>
               </TableRow>
-            ))
-          )}
+        )
+        }
         </TableBody>
       </Table>
-    </div>
-  );
+    </div>;
+
 
   return (
     <div className="space-y-6">
@@ -153,8 +153,8 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
             <CardTitle className="text-sm font-medium text-muted-foreground">Match Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-primary">
-              {matches.length > 0 ? Math.round((summary.matchCount / matches.length) * 100) : 0}%
+            <p className="text-2xl font-bold text-success">
+              {matches.length > 0 ? Math.round(summary.matchCount / matches.length * 100) : 0}%
             </p>
           </CardContent>
         </Card>
@@ -196,6 +196,6 @@ export const ReconciliationResults = ({ matches, summary }: ReconciliationResult
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 };
